@@ -4,7 +4,7 @@ import javax.servlet.http.HttpServletRequest;
 
 public class IPUtil {
 
-    private static final String UNKNOWN = "unknown";
+    private static final String UNKNOW = "unknown";
 
     protected IPUtil() {
 
@@ -17,27 +17,27 @@ public class IPUtil {
      * X-Forwarded-For中第一个非 unknown的有效IP字符串，则为真实IP地址
      */
     public static String getIpAddr(HttpServletRequest request) {
-    HttpHeaders headers = request.getHeaders();
-        String ip = headers.getFirst("x-forwarded-for");
+
+        String ip = request.getHeader("x-forwarded-for");
         if (ip != null && ip.length() != 0 && !UNKNOW.equalsIgnoreCase(ip)) {
             if (ip.contains(StringConstant.COMMA)) {
                 ip = ip.split(StringConstant.COMMA)[0];
             }
         }
         if (ip == null || ip.length() == 0 || UNKNOW.equalsIgnoreCase(ip)) {
-            ip = headers.getFirst("Proxy-Client-IP");
+            ip = request.getHeader("Proxy-Client-IP");
         }
         if (ip == null || ip.length() == 0 || UNKNOW.equalsIgnoreCase(ip)) {
-            ip = headers.getFirst("WL-Proxy-Client-IP");
+            ip = request.getHeader("WL-Proxy-Client-IP");
         }
         if (ip == null || ip.length() == 0 || UNKNOW.equalsIgnoreCase(ip)) {
-            ip = headers.getFirst("HTTP_CLIENT_IP");
+            ip = request.getHeader("HTTP_CLIENT_IP");
         }
         if (ip == null || ip.length() == 0 || UNKNOW.equalsIgnoreCase(ip)) {
-            ip = headers.getFirst("HTTP_X_FORWARDED_FOR");
+            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
         }
         if (ip == null || ip.length() == 0 || UNKNOW.equalsIgnoreCase(ip)) {
-            ip = headers.getFirst("X-Real-IP");
+            ip = request.getHeader("X-Real-IP");
         }
         if (ip == null || ip.length() == 0 || UNKNOW.equalsIgnoreCase(ip)) {
             ip = Objects.requireNonNull(request.getRemoteAddress()).getAddress().getHostAddress();
@@ -60,10 +60,15 @@ public class IPUtil {
             throw new NullPointerException("IP不能为空！");
         ipRange = ipRange.trim();
         ip = ip.trim();
-        final String REGX_IP = "((25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]\\d|\\d)\\.){3}(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]\\d|\\d)";
-        final String REGX_IPB = REGX_IP + "\\-" + REGX_IP;
-        if (!ipRange.matches(REGX_IPB) || !ip.matches(REGX_IP))
-            return false;
+       if (ipRange.contains("-")) {
+            final String REGX_IP = "((25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]\\d|\\d)\\.){3}(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]\\d|\\d)";
+            final String REGX_IPB = REGX_IP + "\\-" + REGX_IP;
+            if (!ipRange.matches(REGX_IPB) || !ip.matches(REGX_IP)) {
+                return false;
+            }
+        } else {
+            return ip.equals(ipRange);
+        }
         int idx = ipRange.indexOf('-');
         String[] sips = ipRange.substring(0, idx).split("\\.");
         String[] sipe = ipRange.substring(idx + 1).split("\\.");

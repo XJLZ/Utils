@@ -19,6 +19,8 @@ import java.io.InputStreamReader;
  */
 public class Ssh2Util {
 
+   public static final String encodeSet = "export LC_CTYPE=zh_CN.UTF-8;";
+
     public static Connection getConn(SshConfig sshConfig) {
         Connection conn = null;
         try {
@@ -70,7 +72,8 @@ public class Ssh2Util {
         try {
             conn = getConn(sshConfig);
             session = conn.openSession();
-            session.execCommand(command);
+            session.execCommand(encodeSet + command);
+            // session.execCommand(command);
             getResult(session.getStdout());
             String result = getError(session.getStderr());
             if (StringUtils.isNotBlank(result)) {
